@@ -69,6 +69,7 @@
                 <option value="">-- Select Passenger Capacity --</option>
                 <option value="Upto 6 Passengers">Upto 6 Passengers</option>
                 <option value="6-20 Passenger">6-20 Passenger</option>
+                <option value="Above 20 Passenger">Above 20 Passenger</option>
             </select>
         </div>
         <div class="input-group" id="nilDepPCVSection" style="display: none;">
@@ -128,10 +129,11 @@
                 }
             },
             "PCV": {
-                categories: ["Upto 6 Passengers", "6-20 Passenger"],
+                categories: ["Upto 6 Passengers", "6-20 Passenger", "Above 20 Passenger"],
                 subCategories: {
                     "Upto 6 Passengers": ["With ND", "W/O ND"],
-                    "6-20 Passenger": ["With ND", "W/O ND"]
+                    "6-20 Passenger": ["With ND", "W/O ND"],
+                    "Above 20 Passenger": ["With ND", "W/O ND"]
                 },
                 results: {
                     "Upto 6 Passengers": {
@@ -139,6 +141,10 @@
                         "W/O ND": { "Yes": "80%", "No": "70%" }
                     },
                     "6-20 Passenger": {
+                        "With ND": { "Yes": "85%", "No": "75%" },
+                        "W/O ND": { "Yes": "80%", "No": "70%" }
+                    },
+                    "Above 20 Passenger": {
                         "With ND": { "Yes": "82%", "No": "72%" },
                         "W/O ND": { "Yes": "80%", "No": "70%" }
                     }
