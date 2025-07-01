@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vehicle Class Result App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        .container {
+            text-align: center;
+        }
+        select, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        #result {
+            margin-top: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+        .footer {
+            font-size: 14px;
+            color: #555;
+            margin-top: 10px;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Vehicle Class Result App</h2>
+        <div class="input-group">
+            <label for="vehicleClass">Select Vehicle Class:</label>
+            <select id="vehicleClass" onchange="updateCategories()">
+                <option value="">-- Select Class --</option>
+                <option value="Pvt. Car">Pvt. Car</option>
+                <option value="GCV">GCV</option>
+                <option value="PCV">PCV</option>
+                <option value="Misc-D">Misc-D</option>
+            </select>
+        </div>
+        <div class="input-group" id="categorySection" style="display: none;">
+            <label for="category">Select Category:</label>
+            <select id="category" onchange="updateAdditionalFields()">
+                <option value="">-- Select Category --</option>
+            </select>
+        </div>
+        <div class="input-group" id="nilDepSection" style="display: none;">
+            <label for="nilDep">Nil Depreciation:</label>
+            <select id="nilDep" onchange="updateGVWSection()">
+                <option value="">-- Select Nil Dep --</option>
+                <option value="With Nil Dep">With Nil Dep</option>
+                <option value="Without Nil Dep">Without Nil Dep</option>
+            </select>
+        </div>
+        <div class="input-group" id="passengerSection" style="display: none;">
+            <label for="passenger">Passenger Capacity:</label>
+            <select id="passenger" onchange="updateAdditionalFields()">
+                <option value="">-- Select Passenger Capacity --</option>
+                <option value="Upto 6 Passengers">Upto 6 Passengers</option>
+                <option value="6-20 Passenger">6-20 Passenger</option>
+            </select>
+        </div>
+        <div class="input-group" id="nilDepPCVSection" style="display: none;">
+            <label for="nilDepPCV">Nil Depreciation:</label>
+            <select id="nilDepPCV" onchange="updateNCBSection()">
+                <option value="">-- Select Nil Dep --</option>
+                <option value="With ND">With ND</option>
+                <option value="W/O ND">W/O ND</option>
+            </select>
+        </div>
+        <div class="input-group" id="gvwSection" style="display: none;">
+            <label for="gvw">GVW (Kgs):</label>
+            <select id="gvw" onchange="updateNCBSection()">
+                <option value="">-- Select GVW --</option>
+                <option value="Upto 10000 Kgs">Upto 10000 Kgs</option>
+                <option value="10001 to 24000 Kgs">10001 to 24000 Kgs</option>
+                <option value="24001 to 28000 Kgs">24001 to 28000 Kgs</option>
+                <option value="28001 to 40000 Kgs">28001 to 40000 Kgs</option>
+                <option value="40001 to 48000 Kgs">40001 to 48000 Kgs</option>
+                <option value="Above 48000 Kgs">Above 48000 Kgs</option>
+            </select>
+        </div>
+        <div class="input-group" id="ncbSection" style="display: none;">
+            <label for="ncb">NCB Eligible:</label>
+            <select id="ncb" required>
+                <option value="">-- Select NCB --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+        <button onclick="showResult()" disabled id="submitBtn">Show Result</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const vehicleData = {
+            "Pvt. Car": {
+                categories: ["SAOD Policy", "Package Policy"],
+                results: {
+                    "SAOD Policy": {
+                        "Yes": "RO's Discretion",
+                        "No": "No additional Over SIP"
+                    },
+                    "Package Policy": {
+                        "Yes": "RO's Discretion. However with ND- Upto 90%, Without ND-80%",
+                        "No": "With ND- Upto 90%, Without ND-80%"
+                    }
+                }
+            },
+            "Misc-D": {
+                categories: ["Miscellaneous"],
+                results: {
+                    "Miscellaneous": {
+                        "Yes": "Upto 85%",
+                        "No": "Upto 75%"
+                    }
+                }
+            },
+            "PCV": {
+                categories: ["Upto 6 Passengers", "6-20 Passenger"],
+                subCategories: {
+                    "Upto 6 Passengers": ["With ND", "W/O ND"],
+                    "6-20 Passenger": ["With ND", "W/O ND"]
+                },
+                results: {
+                    "Upto 6 Passengers": {
+                        "With ND": { "Yes": "88%", "No": "78%" },
+                        "W/O ND": { "Yes": "80%", "No": "70%" }
+                    },
+                    "6-20 Passenger": {
+                        "With ND": { "Yes": "82%", "No": "72%" },
+                        "W/O ND": { "Yes": "80%", "No": "70%" }
+                    }
+                }
+            },
+            "GCV": {
+                categories: ["Own Renewal/Roll Over Fleet", "Roll Over Renewal/Individual"],
+                subCategories: {
+                    "Own Renewal/Roll Over Fleet": ["With Nil Dep", "Without Nil Dep"],
+                    "Roll Over Renewal/Individual": []
+                },
+                gvwOptions: [
+                    "Upto 10000 Kgs",
+                    "10001 to 24000 Kgs",
+                    "24001 to 28000 Kgs",
+                    "28001 to 40000 Kgs",
+                    "40001 to 48000 Kgs",
+                    "Above 48000 Kgs"
+                ],
+                results: {
+                    "Own Renewal/Roll Over Fleet": {
+                        "With Nil Dep": {
+                            "Upto 10000 Kgs": { "Yes": "90%", "No": "80%" },
+                            "10001 to 24000 Kgs": { "Yes": "90%", "No": "80%" },
+                            "24001 to 28000 Kgs": { "Yes": "90%", "No": "80%" },
+                            "28001 to 40000 Kgs": { "Yes": "85%", "No": "75%" },
+                            "40001 to 48000 Kgs": { "Yes": "85%", "No": "75%" },
+                            "Above 48000 Kgs": { "Yes": "80%", "No": "70%" }
+                        },
+                        "Without Nil Dep": {
+                            "Upto 10000 Kgs": { "Yes": "90%", "No": "80%" },
+                            "10001 to 24000 Kgs": { "Yes": "85%", "No": "75%" },
+                            "24001 to 28000 Kgs": { "Yes": "85%", "No": "75%" },
+                            "28001 to 40000 Kgs": { "Yes": "80%", "No": "70%" },
+                            "40001 to 48000 Kgs": { "Yes": "80%", "No": "70%" },
+                            "Above 48000 Kgs": { "Yes": "75%", "No": "65%" }
+                        }
+                    },
+                    "Roll Over Renewal/Individual": {
+                        "Upto 10000 Kgs": { "Yes": "90%", "No": "70%" },
+                        "10001 to 24000 Kgs": { "Yes": "70%", "No": "50%" },
+                        "24001 to 28000 Kgs": { "Yes": "70%", "No": "50%" },
+                        "28001 to 40000 Kgs": { "Yes": "70%", "No": "50%" },
+                        "40001 to 48000 Kgs": { "Yes": "65%", "No": "45%" },
+                        "Above 48000 Kgs": { "Yes": "55%", "No": "35%" }
+                    }
+                }
+            }
+        };
+
+        function updateCategories() {
+            const vehicleClass = document.getElementById("vehicleClass").value;
+            const categorySelect = document.getElementById("category");
+            const categorySection = document.getElementById("categorySection");
+            const nilDepSection = document.getElementById("nilDepSection");
+            const passengerSection = document.getElementById("passengerSection");
+            const nilDepPCVSection = document.getElementById("nilDepPCVSection");
+            const gvwSection = document.getElementById("gvwSection");
+            const ncbSection = document.getElementById("ncbSection");
+            const submitBtn = document.getElementById("submitBtn");
+            const resultDiv = document.getElementById("result");
+
+            // Reset all fields
+            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+            document.getElementById("nilDep").innerHTML = '<option value="">-- Select Nil Dep --</option>';
+            document.getElementById("passenger").innerHTML = '<option value="">-- Select Passenger Capacity --</option>';
+            document.getElementById("nilDepPCV").innerHTML = '<option value="">-- Select Nil Dep --</option>';
+            document.getElementById("gvw").innerHTML = '<option value="">-- Select GVW --</option>';
+            document.getElementById("ncb").innerHTML = '<option value="">-- Select NCB --</option>';
+            categorySection.style.display = "none";
+            nilDepSection.style.display = "none";
+            passengerSection.style.display = "none";
+            nilDepPCVSection.style.display = "none";
+            gvwSection.style.display = "none";
+            ncbSection.style.display = "none";
+            submitBtn.disabled = true;
+            resultDiv.textContent = "";
+
+            if (vehicleClass && vehicleData[vehicleClass]) {
+                categorySection.style.display = "block";
+                vehicleData[vehicleClass].categories.forEach(category => {
+                    const option = document.createElement("option");
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+                if (vehicleClass === "PCV") {
+                    passengerSection.style.display = "block";
+                    vehicleData[vehicleClass].categories.forEach(category => {
+                        const option = document.createElement("option");
+                        option.value = category;
+                        option.textContent = category;
+                        document.getElementById("passenger").appendChild(option);
+                    });
+                }
+            }
+        }
+
+        function updateAdditionalFields() {
+            const vehicleClass = document.getElementById("vehicleClass").value;
+            const category = document.getElementById("category").value;
+            const passenger = document.getElementById("passenger").value;
+            const nilDepSection = document.getElementById("nilDepSection");
+            const nilDepPCVSection = document.getElementById("nilDepPCVSection");
+            const nilDepPCVSelect = document.getElementById("nilDepPCV");
+            const gvwSection = document.getElementById("gvwSection");
+            const gvwSelect = document.getElementById("gvw");
+            const ncbSection = document.getElementById("ncbSection");
+            const submitBtn = document.getElementById("submitBtn");
+            const resultDiv = document.getElementById("result");
+
+            // Reset dependent fields
+            document.getElementById("nilDep").innerHTML = '<option value="">-- Select Nil Dep --</option>';
+            document.getElementById("nilDepPCV").innerHTML = '<option value="">-- Select Nil Dep --</option>';
+            document.getElementById("gvw").innerHTML = '<option value="">-- Select GVW --</option>';
+            document.getElementById("ncb").innerHTML = '<option value="">-- Select NCB --</option>';
+            nilDepSection.style.display = "none";
+            nilDepPCVSection.style.display = "none";
+            gvwSection.style.display = "none";
+            ncbSection.style.display = "none";
+            submitBtn.disabled = true;
+            resultDiv.textContent = "";
+
+            if (vehicleClass && vehicleData[vehicleClass]) {
+                if (vehicleClass === "PCV" && passenger) {
+                    nilDepPCVSection.style.display = "block";
+                    vehicleData[vehicleClass].subCategories[passenger].forEach(subCat => {
+                        const option = document.createElement("option");
+                        option.value = subCat;
+                        option.textContent = subCat;
+                        nilDepPCVSelect.appendChild(option);
+                    });
+                } else if (vehicleClass === "GCV" && category) {
+                    if (category === "Own Renewal/Roll Over Fleet") {
+                        nilDepSection.style.display = "block";
+                        vehicleData[vehicleClass].subCategories[category].forEach(nilDep => {
+                            const option = document.createElement("option");
+                            option.value = nilDep;
+                            option.textContent = nilDep;
+                            document.getElementById("nilDep").appendChild(option);
+                        });
+                    } else if (category === "Roll Over Renewal/Individual") {
+                        gvwSection.style.display = "block";
+                        vehicleData[vehicleClass].gvwOptions.forEach(gvw => {
+                            const option = document.createElement("option");
+                            option.value = gvw;
+                            option.textContent = gvw;
+                            gvwSelect.appendChild(option);
+                        });
+                    }
+                } else if (vehicleClass !== "PCV" && category) {
+                    ncbSection.style.display = "block";
+                    populateNCBOptions();
+                }
+            }
+        }
+
+        function updateGVWSection() {
+            const vehicleClass = document.getElementById("vehicleClass").value;
+            const category = document.getElementById("category").value;
+            const nilDep = document.getElementById("nilDep").value;
+            const gvwSection = document.getElementById("gvwSection");
+            const gvwSelect = document.getElementById("gvw");
+            const ncbSection = document.getElementById("ncbSection");
+            const submitBtn = document.getElementById("submitBtn");
+            const resultDiv = document.getElementById("result");
+
+            // Reset dependent fields
+            gvwSelect.innerHTML = '<option value="">-- Select GVW --</option>';
+            document.getElementById("ncb").innerHTML = '<option value="">-- Select NCB --</option>';
+            gvwSection.style.display = "none";
+            ncbSection.style.display = "none";
+            submitBtn.disabled = true;
+            resultDiv.textContent = "";
+
+            if (vehicleClass === "GCV" && category === "Own Renewal/Roll Over Fleet" && nilDep) {
+                gvwSection.style.display = "block";
+                vehicleData[vehicleClass].gvwOptions.forEach(gvw => {
+                    const option = document.createElement("option");
+                    option.value = gvw;
+                    option.textContent = gvw;
+                    gvwSelect.appendChild(option);
+                });
+            }
+        }
+
+        function updateNCBSection() {
+            const vehicleClass = document.getElementById("vehicleClass").value;
+            const category = document.getElementById("category").value;
+            const passenger = document.getElementById("passenger").value;
+            const nilDepPCV = document.getElementById("nilDepPCV").value;
+            const gvw = document.getElementById("gvw").value;
+            const ncbSection = document.getElementById("ncbSection");
+            const submitBtn = document.getElementById("submitBtn");
+            const resultDiv = document.getElementById("result");
+
+            // Reset NCB and result
+            document.getElementById("ncb").innerHTML = '<option value="">-- Select NCB --</option>';
+            ncbSection.style.display = "none";
+            submitBtn.disabled = true;
+            resultDiv.textContent = "";
+
+            if (vehicleClass === "PCV" && passenger && nilDepPCV) {
+                ncbSection.style.display = "block";
+                populateNCBOptions();
+            } else if (vehicleClass === "GCV" && ((category === "Own Renewal/Roll Over Fleet" && gvw) || (category === "Roll Over Renewal/Individual" && gvw))) {
+                ncbSection.style.display = "block";
+                populateNCBOptions();
+            }
+        }
+
+        function populateNCBOptions() {
+            const ncbSelect = document.getElementById("ncb");
+            ncbSelect.innerHTML = '<option value="">-- Select NCB --</option>';
+            ["Yes", "No"].forEach(option => {
+                const opt = document.createElement("option");
+                opt.value = option;
+                opt.textContent = option;
+                ncbSelect.appendChild(opt);
+            });
+        }
+
+        function showResult() {
+            const vehicleClass = document.getElementById("vehicleClass").value;
+            const category = document.getElementById("category").value;
+            const nilDep = document.getElementById("nilDep").value;
+            const passenger = document.getElementById("passenger").value;
+            const nilDepPCV = document.getElementById("nilDepPCV").value;
+            const gvw = document.getElementById("gvw").value;
+            const ncb = document.getElementById("ncb").value;
+            const resultDiv = document.getElementById("result");
+
+            if (!vehicleClass || !category || !ncb) {
+                resultDiv.innerHTML = "Please complete all required selections, including NCB Eligible.";
+                return;
+            }
+
+            let result = "No result available";
+            if (vehicleClass === "Pvt. Car" || vehicleClass === "Misc-D") {
+                result = vehicleData[vehicleClass].results[category][ncb];
+            } else if (vehicleClass === "PCV") {
+                if (passenger && nilDepPCV) {
+                    result = vehicleData[vehicleClass].results[passenger][nilDepPCV][ncb];
+                } else {
+                    result = "Please select Passenger Capacity and Nil Depreciation.";
+                }
+            } else if (vehicleClass === "GCV") {
+                if (category === "Own Renewal/Roll Over Fleet") {
+                    if (nilDep && gvw) {
+                        result = vehicleData[vehicleClass].results[category][nilDep][gvw][ncb];
+                    } else {
+                        result = "Please select Nil Depreciation and GVW.";
+                    }
+                } else if (gvw) {
+                    result = vehicleData[vehicleClass].results[category][gvw][ncb];
+                } else {
+                    result = "Please select GVW.";
+                }
+            }
+
+            // Add footers
+            let footer = '<div class="footer">5-10% additional on the eligible discount may be allowed by RO on case to case basis.</div>';
+            if (ncb === "No") {
+                footer += '<div class="footer">Discount may be given at par with "With NCB" if there is no claim in the previous policy & NCB is lost due to transfer or Non-timely renewal of policy.</div>';
+            }
+
+            resultDiv.innerHTML = `${result}${footer}`;
+        }
+
+        // Enable submit button when NCB is selected
+        document.getElementById("ncb").addEventListener("change", () => {
+            document.getElementById("submitBtn").disabled = document.getElementById("ncb").value === "";
+        });
+    </script>
+</body>
+</html>
